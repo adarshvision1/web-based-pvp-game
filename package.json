@@ -1,0 +1,16 @@
+{
+    "name": "anime-fight-game",
+    "version": "1.0.0",
+    "description": "An anime-themed 1v1 fighting game",
+    "main": "game.js",
+    "scripts": {
+      "start": "http-server ."
+    },
+    "dependencies": {
+      "monad": "^1.0.0"
+    },
+    "devDependencies": {},
+    "author": "",
+    "license": "ISC"
+  }
+  

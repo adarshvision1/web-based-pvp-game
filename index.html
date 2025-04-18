@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASHURAKAI:DEATHBOUND</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Crimson Pro', serif;
+      background-color: #000000;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #000000 0%, #0a0a14 40%, #000000 100%);
+      z-index: -1;
+    }
+    
+    #gameCanvas {
+      display: none;
+      border: 2px solid #6b5c3d;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+    
+    #startScreen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      max-width: 800px;
+      position: relative;
+    }
+    
+    /* Cathedral window frame */
+    .cathedral-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 3px solid #6b5c3d;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      pointer-events: none;
+      background-color: rgba(0, 0, 0, 0.9);
+      clip-path: polygon(
+        0% 0%, 
+        100% 0%, 
+        100% 85%, 
+        75% 85%, 
+        50% 100%, 
+        25% 85%, 
+        0% 85%
+      );
+      z-index: -1;
+    }
+    
+    .cathedral-frame::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: calc(15% + 10px);
+      border: 1px solid rgba(107, 92, 61, 0.5);
+      pointer-events: none;
+    }
+    
+    /* Stained glass elements */
+    .stained-glass {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+    
+    .glass-panel {
+      position: absolute;
+      background: radial-gradient(
+        circle at center,
+        rgba(128, 0, 0, 0.1) 0%,
+        rgba(0, 0, 128, 0.1) 100%
+      );
+      width: 100%;
+      height: 85%;
+      clip-path: polygon(25% 0%, 75% 0%, 75% 100%, 50% 85%, 25% 100%);
+      top: 0;
+    }
+    
+    /* Add gothic crosses */
+    .gothic-cross {
+      position: absolute;
+      width: 40px;
+      height: 70px;
+      background-color: rgba(107, 92, 61, 0.3);
+      clip-path: polygon(
+        40% 0, 60% 0, 60% 30%, 100% 30%, 100% 50%, 60% 50%, 60% 100%, 40% 100%, 40% 50%, 0 50%, 0 30%, 40% 30%
+      );
+    }
+    
+    .cross-left {
+      top: 50px;
+      left: 50px;
+      transform: rotate(-5deg);
+    }
+    
+    .cross-right {
+      top: 50px;
+      right: 50px;
+      transform: rotate(5deg);
+    }
+    
+    .glass-division {
+      position: absolute;
+      width: 3px;
+      background-color: rgba(107, 92, 61, 0.8);
+      height: 85%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .glass-arc {
+      position: absolute;
+      width: 50%;
+      height: 40%;
+      border: 3px solid rgba(107, 92, 61, 0.8);
+      border-bottom: none;
+      border-radius: 50% 50% 0 0;
+      top: 0;
+      left: 25%;
+    }
+    
+    /* Title area with improved effects */
+    .title-area {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-top: 40px;
+      position: relative;
+    }
+    
+    /* Add decorative spikes at top */
+    .title-area::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 20px;
+      background-image: repeating-linear-gradient(
+        to right,
+        transparent 0px,
+        transparent 20px,
+        #6b5c3d 20px,
+        #6b5c3d 25px,
+        transparent 25px,
+        transparent 45px
+      );
+      opacity: 0.3;
+    }
+    
+    .title-area h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 5rem;
+      color: #a39161;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      text-shadow: 0 0 10px rgba(163, 145, 97, 0.3), 2px 2px 5px rgba(0, 0, 0, 0.9);
+      margin-bottom: 10px;
+      position: relative;
+    }
+    
+    .title-area h2 {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 2rem;
+      color: #c0ad7b;
+      text-transform: uppercase;
+      letter-spacing: 12px;
+      text-shadow: 0 0 5px rgba(163, 145, 97, 0.2), 1px 1px 3px rgba(0, 0, 0, 0.8);
+      margin-bottom: 20px;
+    }
+    
+    /* Navigation buttons */
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 40px;
+      margin-bottom: 60px;
+      position: relative;
+    }
+    
+    .button-container::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 1px;
+      top: -20px;
+      left: -50%;
+      background: linear-gradient(to right, transparent, rgba(107, 92, 61, 0.5), transparent);
+    }
+    
+    .gothic-button {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #a39161;
+      border: 1px solid #6b5c3d;
+      font-family: 'Cinzel', serif;
+      padding: 16px 45px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      display: inline-block;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    .gothic-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(163, 145, 97, 0.15);
+      transition: all 0.3s ease;
+    }
+    
+    .gothic-button::after {
+      content: '';
+      position: absolute;
+      width: calc(100% - 10px);
+      height: calc(100% - 10px);
+      top: 5px;
+      left: 5px;
+      border: 1px solid rgba(163, 145, 97, 0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .gothic-button:hover {
+      color: #c0ad7b;
+      border-color: #a39161;
+      box-shadow: 0 0 30px rgba(163, 145, 97, 0.3);
+      transform: translateY(-3px);
+      letter-spacing: 4px;
+    }
+    
+    .gothic-button:hover::before {
+      left: 0;
+    }
+    
+    .gothic-button:hover::after {
+      opacity: 1;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(163, 145, 97, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(163, 145, 97, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(163, 145, 97, 0); }
+    }
+    
+    #startButton {
+      animation: pulse 2s infinite;
+    }
+    
+    /* Character silhouettes */
+    .character-silhouette {
+      position: absolute;
+      bottom: 25%;
+      width: 150px;
+      height: 300px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: brightness(0);
+      opacity: 0.5;
+      transition: all 0.3s ease;
+    }
+    
+    .aizen-silhouette {
+      left: 20%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 300"><path d="M60,40 C40,40 30,60 30,90 L30,220 C30,240 45,260 60,260 C75,260 90,240 90,220 L90,90 C90,60 80,40 60,40 Z" fill="%23FFFFFF"/><circle cx="60" cy="30" r="20" fill="%23FFFFFF"/></svg>');
+    }
+    
+    .dio-silhouette {
+      right: 20%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 300"><path d="M60,40 C40,40 30,60 30,90 L30,220 C30,240 45,260 60,260 C75,260 90,240 90,220 L90,90 C90,60 80,40 60,40 Z" fill="%23FFFFFF"/><circle cx="60" cy="30" r="20" fill="%23FFFFFF"/></svg>');
+    }
+    
+    /* Verses separator */
+    .versus {
+      font-family: 'Cinzel', serif;
+      position: absolute;
+      bottom: 40%;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #a39161;
+      font-size: 2.5rem;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      opacity: 0.7;
+    }
+    
+    /* Subtitle and description */
+    .subtitle {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    
+    .description {
+      color: #6b5c3d;
+      font-style: italic;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      margin-bottom: 10px;
+    }
+    
+    /* Light beams effect */
+    .light-beam {
+      position: absolute;
+      top: 0;
+      width: 150px;
+      height: 100%;
+      background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+      transform: rotate(45deg);
+      opacity: 0;
+      animation: beam-move 15s infinite;
+      pointer-events: none;
+    }
+    
+    .light-beam:nth-child(2) {
+      width: 100px;
+      animation-delay: 5s;
+    }
+    
+    .light-beam:nth-child(3) {
+      width: 70px;
+      animation-delay: 10s;
+    }
+    
+    @keyframes beam-move {
+      0% { left: -10%; opacity: 0; }
+      20% { opacity: 0.3; }
+      50% { opacity: 0.5; }
+      80% { opacity: 0.3; }
+      100% { left: 110%; opacity: 0; }
+    }
+    
+    /* Night sky with stars and moon */
+    .night-sky {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+    
+    .stars {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    
+    @keyframes twinkle {
+      0% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+      100% { opacity: 0.2; }
+    }
+    
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      opacity: 0.2;
+    }
+    
+    .blood-moon {
+      position: absolute;
+      top: 10%;
+      right: 15%;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, #800000 0%, #400000 40%, #200000 70%, transparent 100%);
+      box-shadow: 0 0 50px rgba(128, 0, 0, 0.3);
+      opacity: 0.6;
+    }
+    
+    /* Fog effect at the bottom */
+    .fog {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40%;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+      z-index: -1;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .title-area h1 {
+        font-size: 3.5rem;
+      }
+      
+      .title-area h2 {
+        font-size: 1.5rem;
+      }
+      
+      .cathedral-frame {
+        clip-path: polygon(
+          0% 0%, 
+          100% 0%, 
+          100% 90%, 
+          75% 90%, 
+          50% 100%, 
+          25% 90%, 
+          0% 90%
+        );
+      }
+      
+      .button-container {
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .character-silhouette {
+        width: 120px;
+        height: 240px;
+      }
+      
+      .versus {
+        font-size: 2rem;
+      }
+      
+      .button-container::before {
+        width: 100%;
+        left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="night-sky">
+    <div class="stars" id="starsContainer"></div>
+    <div class="blood-moon"></div>
+    <div class="fog"></div>
+  </div>
+
+  <div id="startScreen">
+    <div class="main-container">
+      <div class="cathedral-frame"></div>
+      
+      <div class="stained-glass">
+        <div class="glass-panel"></div>
+        <div class="glass-division"></div>
+        <div class="glass-arc"></div>
+      </div>
+      
+      <div class="gothic-cross cross-left"></div>
+      <div class="gothic-cross cross-right"></div>
+      
+      <div class="character-silhouette aizen-silhouette"></div>
+      <div class="character-silhouette dio-silhouette"></div>
+      <div class="versus">VS</div>
+      
+      <div class="light-beam"></div>
+      <div class="light-beam"></div>
+      <div class="light-beam"></div>
+      
+      <div class="title-area">
+        <h1>ASHURAKAI</h1>
+        <h2>DEATHBOUND</h2>
+      </div>
+      
+      <div class="subtitle">
+        <p class="description">TWO IMMORTAL SOULS</p>
+        <p class="description">ONE ETERNAL BATTLE</p>
+      </div>
+      
+      <div class="button-container">
+        <button id="startButton" class="gothic-button">BEGIN BATTLE</button>
+        <a href="controls.html" class="gothic-button">CONTROLS</a>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+  <script src="game.js"></script>
+  <script>
+    // Create stars dynamically
+    function createStars() {
+      const starsContainer = document.getElementById('starsContainer');
+      const starCount = 150;
+      
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // Random position
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        
+        // Random size
+        const size = Math.random() * 2;
+        
+        // Random twinkle animation
+        const duration = 3 + Math.random() * 5;
+        const delay = Math.random() * 5;
+        
+        star.style.left = `${x}%`;
+        star.style.top = `${y}%`;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.animation = `twinkle ${duration}s infinite ${delay}s`;
+        
+        starsContainer.appendChild(star);
+      }
+    }
+    
+    // Call when page loads
+    window.addEventListener('load', createStars);
+    
+    document.getElementById('startButton').addEventListener('click', function() {
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('gameCanvas').style.display = 'block';
+      initGame(); // Initialize the game
+      startGame(); // Start the game
+    });
+  </script>
+</body>
+</html>
